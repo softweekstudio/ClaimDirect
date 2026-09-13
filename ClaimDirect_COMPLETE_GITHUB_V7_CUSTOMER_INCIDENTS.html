@@ -1,0 +1,1068 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ClaimDirect</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;font-family:Inter,Arial,sans-serif;background:#f5f6f8;color:#17202a}
+button,input{font:inherit}
+button{cursor:pointer}
+.hidden{display:none!important}
+.app{min-height:100vh}
+.topbar{height:64px;background:#fff;border-bottom:1px solid #e5e7eb;display:flex;align-items:center;padding:0 24px;font-weight:800;font-size:22px}
+.topbar span{font-weight:500;color:#6b7280;font-size:13px;margin-left:10px}
+.access{min-height:calc(100vh - 64px);display:flex;align-items:center;justify-content:center;padding:30px}
+.access-card{width:min(1050px,100%);background:#fff;border:1px solid #e5e7eb;border-radius:22px;box-shadow:0 15px 45px #0000000c;overflow:hidden}
+.access-head{text-align:center;padding:34px 25px 22px}
+.access-head h1{margin:0 0 8px;font-size:30px}
+.access-head p{margin:0;color:#6b7280}
+.roles{display:grid;grid-template-columns:1fr 1fr;border-top:1px solid #e5e7eb}
+.role{padding:34px;min-height:300px}
+.role+ .role{border-left:1px solid #e5e7eb}
+.role h2{margin:0 0 8px}
+.role p{color:#6b7280;min-height:42px}
+.btn{border:0;border-radius:10px;padding:12px 17px;font-weight:700}
+.btn.primary{background:#17202a;color:white}
+.btn.secondary{background:#eef1f4;color:#17202a}
+.btn.danger{background:#fee2e2;color:#991b1b}
+.btn.full{width:100%}
+.form{max-width:470px;margin:auto}
+.form h2{margin-top:0}
+label{display:block;font-size:13px;font-weight:700;margin:15px 0 7px}
+input{width:100%;padding:12px 13px;border:1px solid #d7dbe0;border-radius:10px;outline:none}
+input:focus{border-color:#697586}
+.actions{display:flex;gap:10px;margin-top:18px;flex-wrap:wrap}
+.muted{color:#6b7280;font-size:13px}
+.page{min-height:100vh;background:#f5f6f8}
+.workspace{display:flex;min-height:calc(100vh - 64px)}
+.sidebar{width:42px;background:#fff;border-right:1px solid #e5e7eb;display:flex;flex-direction:column;align-items:center;padding:12px 5px;gap:9px;transition:.2s;overflow:hidden}
+.sidebar.open{width:250px;align-items:stretch;padding:16px}
+.strip-logo,.strip-photo{width:30px;height:30px;border-radius:8px;object-fit:cover;background:#e9edf1;flex:none}
+.sidebar.open .strip-logo,.sidebar.open .strip-photo{width:42px;height:42px}
+.agent-name{font-size:14px;font-weight:800;white-space:nowrap;overflow:hidden}
+.agent-meta{font-size:11px;color:#6b7280;white-space:nowrap}
+.side-toggle{border:0;background:#eef1f4;border-radius:8px;padding:6px;margin-top:auto}
+.main{flex:1;padding:28px;overflow:auto}
+.container{max-width:1050px;margin:auto}
+.panel{background:#fff;border:1px solid #e5e7eb;border-radius:16px;padding:24px;margin-bottom:20px}
+.panel h2,.panel h3{margin-top:0}
+.profile-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.preview{height:170px;border:1px dashed #cfd5dc;border-radius:14px;display:flex;align-items:center;justify-content:center;background:#fafafa;overflow:hidden}
+.preview img{max-width:100%;max-height:100%;object-fit:contain}
+.customer-row{display:flex;align-items:center;justify-content:space-between;gap:15px;border:1px solid #e5e7eb;border-radius:12px;padding:15px;margin-top:10px}
+.code{font-family:monospace;font-weight:800;background:#f1f3f5;padding:5px 8px;border-radius:7px}
+.portal-layout{display:flex;min-height:calc(100vh - 64px)}
+.portal-main{flex:1;padding:28px}
+.locked-card{opacity:.96}
+.lock-icon{font-size:24px}
+.notice{padding:12px 14px;background:#f3f4f6;border-radius:10px;color:#4b5563;font-size:13px;margin-top:15px}
+@media(max-width:700px){
+ .roles,.profile-grid{grid-template-columns:1fr}
+ .role+ .role{border-left:0;border-top:1px solid #e5e7eb}
+ .main,.portal-main{padding:16px}
+ .access{padding:15px}
+ .customer-row{align-items:flex-start;flex-direction:column}
+}
+</style>
+</head>
+<body>
+<div class="app">
+<header class="topbar">ClaimDirect <span>Insurance Claims Platform · V7 Customer Incidents</span></header>
+
+<!-- ACCESS -->
+<section id="accessPage" class="access">
+ <div class="access-card">
+  <div class="access-head">
+   <h1>Welcome to ClaimDirect</h1>
+   <p>Select your access type to continue.</p>
+  </div>
+  <div class="roles">
+   <div class="role">
+    <h2>Insurance Agent</h2>
+    <p>Manage your insurance profile, customers and claim access.</p>
+    <div class="actions">
+     <button class="btn primary" id="agentLoginBtn">Login</button>
+     <button class="btn secondary" id="agentCreateBtn">Create Account</button>
+    </div>
+   </div>
+   <div class="role">
+    <h2>Customer</h2>
+    <p>Access your customer portal and manage your incidents.</p>
+    <div class="actions">
+     <button class="btn primary" id="customerLoginBtn">Login</button>
+     <button class="btn secondary" id="customerCreateBtn">Create Account</button>
+    </div>
+   </div>
+  </div>
+ </div>
+</section>
+
+<!-- AGENT AUTH -->
+<section id="agentAuth" class="access hidden">
+ <div class="access-card">
+  <div class="access-head"><h1 id="agentAuthTitle">Insurance Agent Login</h1><p>Access your ClaimDirect account.</p></div>
+  <div class="form" style="padding:0 30px 35px">
+   <label>Email</label><input id="agentEmail" type="email" placeholder="agent@example.com">
+   <label>Password</label><input id="agentPassword" type="password" placeholder="Password">
+   <div class="actions">
+    <button class="btn primary" id="agentAuthSubmit">Login</button>
+    <button class="btn secondary" id="agentAuthBack">Back</button>
+   </div>
+   <div id="agentAuthMessage" class="notice hidden"></div>
+  </div>
+ </div>
+</section>
+
+<!-- CUSTOMER AUTH -->
+<section id="customerAuth" class="access hidden">
+ <div class="access-card">
+  <div class="access-head"><h1 id="customerAuthTitle">Customer Login</h1><p id="customerAuthSubtitle">Access your ClaimDirect customer portal.</p></div>
+  <div class="form" style="padding:0 30px 35px">
+   <label>Email</label><input id="customerEmail" type="email" placeholder="customer@example.com">
+   <label>Password</label><input id="customerPassword" type="password" placeholder="Password">
+   <div class="actions">
+    <button class="btn primary" id="customerAuthSubmit">Login</button>
+    <button class="btn secondary" id="customerAuthBack">Back</button>
+   </div>
+   <div id="customerAuthMessage" class="notice hidden"></div>
+  </div>
+ </div>
+</section>
+
+<!-- SHARED CUSTOMER LOGIN -->
+<section id="sharedLogin" class="access hidden">
+ <div class="access-card">
+  <div class="access-head"><h1>Welcome to ClaimDirect</h1><p>Customer access</p></div>
+  <div class="roles">
+   <div class="role locked-card">
+    <div class="lock-icon">🔒</div>
+    <h2>Insurance Agent</h2>
+    <p id="sharedInsurerText">Insurance information</p>
+    <div class="preview" style="height:100px"><img id="sharedLogo" alt="Insurance logo"></div>
+    <div class="notice">This section is locked. Customer access is already linked to the insurance agent.</div>
+   </div>
+   <div class="role">
+    <h2>Customer</h2>
+    <p>Sign in to continue to your customer portal.</p>
+    <label>Email</label><input id="sharedEmail" type="email" placeholder="customer@example.com">
+    <label>Password</label><input id="sharedPassword" type="password" placeholder="Password">
+    <div class="actions"><button class="btn primary" id="sharedLoginBtn">Login</button><button class="btn secondary" id="sharedCreateBtn">Create Account</button></div>
+    <div id="sharedMessage" class="notice hidden"></div>
+   </div>
+  </div>
+ </div>
+</section>
+
+<!-- AGENT PROFILE -->
+<section id="agentProfile" class="page hidden">
+ <div class="main">
+  <div class="container">
+   <div class="panel">
+    <h2>Insurance Agent Profile</h2>
+    <p class="muted">This information is shown to your customers.</p>
+    <div class="profile-grid">
+     <div>
+      <label>First Name</label><input id="firstName" placeholder="First Name">
+      <label>Last Name</label><input id="lastName" placeholder="Last Name">
+      <label>Date of Birth</label><input id="dob" type="date">
+      <label>Agent ID / Employee ID <span class="muted">(Optional)</span></label><input id="agentId" placeholder="Agent ID">
+      <label>Profile Photo <span class="muted">(Optional)</span></label><input id="agentPhotoInput" type="file" accept="image/*">
+     </div>
+     <div>
+      <label>Insurance Logo</label><input id="logoInput" type="file" accept="image/*">
+      <div class="preview"><img id="logoPreview" alt="Insurance logo"></div>
+      <div class="notice">Logo editor can be expanded later with the approved manual crop tool.</div>
+     </div>
+    </div>
+    <div class="actions">
+     <button class="btn primary" id="saveProfile">Save Profile</button>
+    </div>
+    <div id="profileMessage" class="notice hidden"></div>
+   </div>
+  </div>
+ </div>
+</section>
+
+<!-- AGENT DASHBOARD -->
+<section id="agentDashboard" class="page hidden">
+ <div class="workspace">
+  <aside id="agentSidebar" class="sidebar">
+   <img id="sideLogo" class="strip-logo" alt="Logo">
+   <img id="sidePhoto" class="strip-photo" alt="Agent">
+   <div id="sideName" class="agent-name"></div>
+   <div id="sideMeta" class="agent-meta"></div>
+   <button class="side-toggle" id="sideToggle">›</button>
+  </aside>
+  <main class="main">
+   <div class="container">
+    <div class="panel">
+     <h2>Dashboard</h2>
+     <p class="muted">Manage your customers and their ClaimDirect access.</p>
+     <div class="actions">
+      <button class="btn primary" id="addCustomerBtn">Add Customer</button>
+      <button class="btn secondary" id="customersQuickBtn">Customers</button>
+      <button class="btn secondary" id="editProfileBtn">Edit Profile</button>
+      <button class="btn secondary" id="agentLogoutBtn">Log Out</button>
+     </div>
+    </div>
+    <div id="customerFormPanel" class="panel hidden">
+     <h3>Add Customer</h3>
+     <p class="muted">Create a customer and generate a permanent ClaimDirect access code for that customer.</p>
+     <label>Customer Name</label><input id="newCustomerName" placeholder="Customer Name">
+     <label>Email</label><input id="newCustomerEmail" type="email" placeholder="customer@example.com">
+     <label>Phone</label><input id="newCustomerPhone" placeholder="Phone">
+     <div class="actions">
+      <button class="btn primary" id="saveCustomer">Create Customer Access</button>
+      <button class="btn secondary" id="cancelCustomer">Cancel</button>
+     </div>
+    </div>
+    <div class="panel">
+     <h3>Customers</h3>
+     <div id="customerList"></div>
+     <div id="emptyCustomers" class="muted">No customers yet. Click Add Customer above to create the first customer.</div>
+     <div class="notice">Demo mode: customer records and access codes are stored in this browser. A real shareable cross-device customer link requires the ClaimDirect backend.</div>
+    </div>
+   </div>
+  </main>
+ </div>
+</section>
+
+<!-- CUSTOMER PORTAL -->
+<section id="customerPortal" class="page hidden">
+ <div class="portal-layout">
+  <aside id="customerSidebar" class="sidebar">
+   <img id="customerSideLogo" class="strip-logo" alt="Insurance logo">
+   <img id="customerSidePhoto" class="strip-photo" alt="Insurance agent">
+   <div id="customerSideName" class="agent-name"></div>
+   <div id="customerSideMeta" class="agent-meta"></div>
+   <button class="side-toggle" id="customerSideToggle">›</button>
+  </aside>
+  <main class="portal-main">
+   <div class="container">
+    <div class="panel">
+     <h2>Customer Portal</h2>
+     <p class="muted">Your insurance information is read-only. Your personal claim information belongs to your customer account.</p>
+    </div>
+    <div class="panel">
+     <h3>My Profile</h3>
+     <p class="muted">Manage your personal customer information.</p>
+     <div class="profile-grid">
+      <div>
+       <label>First Name</label>
+       <input id="custFirstName" placeholder="First Name">
+       <label>Last Name</label>
+       <input id="custLastName" placeholder="Last Name">
+       <label>Date of Birth</label>
+       <input id="custDob" type="date">
+      </div>
+      <div>
+       <label>Address</label>
+       <input id="custAddress" placeholder="Address">
+       <label>Phone</label>
+       <input id="custPhone" placeholder="Phone">
+       <label>Email</label>
+       <input id="custPortalEmail" type="email" placeholder="Email">
+      </div>
+     </div>
+     <div class="actions">
+      <button class="btn primary" id="saveCustomerProfile">Save Profile</button>
+     </div>
+     <div id="customerProfileMessage" class="notice hidden"></div>
+    </div>
+
+    <div class="panel">
+     <h3>My Vehicle</h3>
+     <p class="muted">Store the vehicle information associated with your insurance account.</p>
+     <div class="profile-grid">
+      <div>
+       <label>Vehicle Make</label>
+       <input id="vehicleMake" placeholder="Vehicle Make">
+       <label>Model</label>
+       <input id="vehicleModel" placeholder="Model">
+       <label>Year</label>
+       <input id="vehicleYear" type="number" min="1886" max="2100" placeholder="Year">
+      </div>
+      <div>
+       <label>License Plate</label>
+       <input id="vehiclePlate" placeholder="License Plate">
+       <label>VIN</label>
+       <input id="vehicleVin" placeholder="VIN">
+      </div>
+     </div>
+     <div class="actions">
+      <button class="btn primary" id="saveVehicle">Save Vehicle</button>
+     </div>
+     <div id="vehicleMessage" class="notice hidden"></div>
+    </div>
+
+    <div class="panel">
+     <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap">
+      <div>
+       <h3 style="margin-bottom:5px">My Incidents</h3>
+       <p class="muted">View your incidents or create a new incident report.</p>
+      </div>
+      <button class="btn primary" id="incidentBtn">New Incident</button>
+     </div>
+     <div id="customerIncidentsList" style="margin-top:16px"></div>
+     <div id="noCustomerIncidents" class="notice">No incidents have been created yet.</div>
+    </div>
+    <button class="btn secondary" id="customerLogoutBtn">Log Out</button>
+   </div>
+  </main>
+ </div>
+</section>
+</div>
+
+
+<!-- INCIDENT APP -->
+<section id="incidentApp" class="page hidden">
+ <div class="workspace">
+  <aside id="incidentSidebar" class="sidebar">
+   <img id="incidentSideLogo" class="strip-logo" alt="Insurance logo">
+   <img id="incidentSidePhoto" class="strip-photo" alt="Insurance agent">
+   <div id="incidentSideName" class="agent-name"></div>
+   <div id="incidentSideMeta" class="agent-meta"></div>
+   <button class="side-toggle" id="incidentSideToggle">›</button>
+  </aside>
+
+  <main class="main">
+   <div class="container">
+
+    <div class="panel">
+     <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap">
+      <div>
+       <h2>ClaimDirect Incident Report</h2>
+       <p class="muted">Create an incident report with evidence photos and generate a PDF.</p>
+      </div>
+      <button class="btn secondary" id="incidentBackBtn">Back to Customer Portal</button>
+     </div>
+    </div>
+
+    <div class="panel">
+     <h3>Customer & Insurance Details</h3>
+     <div class="profile-grid">
+      <div>
+       <label>Full Name</label>
+       <input id="incName" placeholder="Full Name">
+       <label>Phone</label>
+       <input id="incPhone" placeholder="Phone Number">
+       <label>Email</label>
+       <input id="incEmail" type="email" placeholder="Email">
+      </div>
+      <div>
+       <label>Insurance Company</label>
+       <input id="incInsurer" placeholder="Insurance Company">
+       <label>Policy Number</label>
+       <input id="incPolicy" placeholder="Policy Number">
+       <label>Vehicle / License Plate</label>
+       <input id="incVehicle" placeholder="Vehicle / License Plate">
+      </div>
+     </div>
+    </div>
+
+    <div class="panel">
+     <h3>New Incident</h3>
+     <div class="profile-grid">
+      <div>
+       <label>Date</label>
+       <input id="incDate" type="date">
+      </div>
+      <div>
+       <label>Time</label>
+       <input id="incTime" type="time">
+      </div>
+     </div>
+
+     <label>Location</label>
+     <input id="incLocation" placeholder="Enter the incident location">
+     <div class="actions">
+      <button class="btn secondary" id="incLocationBtn">Detect Location</button>
+     </div>
+
+     <label>Incident Description</label>
+     <textarea id="incDescription" placeholder="Describe what happened..." style="width:100%;min-height:110px;padding:12px;border:1px solid #d7dbe0;border-radius:10px;resize:vertical"></textarea>
+    </div>
+
+    <div class="panel">
+     <h3>Incident Photos</h3>
+     <p class="muted">Take photos with the camera or choose images from your gallery. Photos are included in the generated PDF.</p>
+     <input id="incCamera" type="file" accept="image/*" capture="environment" multiple>
+     <div id="incPhotos" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px;margin-top:12px"></div>
+    </div>
+
+    <div class="panel">
+     <h3>Report</h3>
+     <div class="actions">
+      <button class="btn primary" id="incCreateReport">Create Incident Report</button>
+      <button class="btn primary hidden" id="incPdfBtn">Generate / Share PDF</button>
+     </div>
+     <div id="incReport" class="notice hidden" style="white-space:pre-wrap;margin-top:12px"></div>
+     <div id="incStatus" class="notice hidden"></div>
+    </div>
+
+   </div>
+  </main>
+ </div>
+</section>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script>
+"use strict";
+
+const $ = id => document.getElementById(id);
+const KEY_PROFILE = "claimdirect_profile_v1";
+const KEY_CUSTOMERS = "claimdirect_customers_v1";
+const KEY_SESSION = "claimdirect_session_v1";
+
+let authMode = "login";
+let sharedCode = null;
+
+function show(id){
+  ["accessPage","agentAuth","customerAuth","sharedLogin","agentProfile","agentDashboard","customerPortal"]
+    .forEach(x => $(x).classList.toggle("hidden", x !== id));
+}
+function msg(id,text){
+  const el=$(id); el.textContent=text; el.classList.remove("hidden");
+}
+function readImage(file, cb){
+  if(!file){cb("");return;}
+  const r=new FileReader();
+  r.onload=()=>cb(r.result);
+  r.readAsDataURL(file);
+}
+function getProfile(){return JSON.parse(localStorage.getItem(KEY_PROFILE)||"null");}
+function getCustomers(){return JSON.parse(localStorage.getItem(KEY_CUSTOMERS)||"[]");}
+function saveCustomers(a){localStorage.setItem(KEY_CUSTOMERS,JSON.stringify(a));}
+function currentSession(){return JSON.parse(localStorage.getItem(KEY_SESSION)||"null");}
+
+function fillProfile(){
+ const p=getProfile(); if(!p)return;
+ $("firstName").value=p.firstName||"";
+ $("lastName").value=p.lastName||"";
+ $("dob").value=p.dob||"";
+ $("agentId").value=p.agentId||"";
+ if(p.logo)$("logoPreview").src=p.logo;
+ updateAgentStrip();
+}
+function updateAgentStrip(){
+ const p=getProfile()||{};
+ $("sideLogo").src=p.logo||"";
+ $("sidePhoto").src=p.photo||"";
+ $("sideName").textContent=((p.firstName||"")+" "+(p.lastName||"")).trim();
+ $("sideMeta").textContent=p.agentId?("Agent ID: "+p.agentId):"Insurance Agent";
+ $("customerSideLogo").src=p.logo||"";
+ $("customerSidePhoto").src=p.photo||"";
+ $("customerSideName").textContent=((p.firstName||"")+" "+(p.lastName||"")).trim();
+ $("customerSideMeta").textContent=p.agentId?("Agent ID: "+p.agentId):"Insurance Agent";
+}
+
+function renderCustomers(){
+ const list=$("customerList"), empty=$("emptyCustomers");
+ list.innerHTML="";
+ const arr=getCustomers();
+ empty.classList.toggle("hidden",arr.length>0);
+ arr.forEach(c=>{
+  const row=document.createElement("div"); row.className="customer-row";
+  row.innerHTML="<div><strong>"+escapeHtml(c.name)+"</strong><div class='muted'>"+escapeHtml(c.email||"")+(c.phone?" · "+escapeHtml(c.phone):"")+"</div><div style='margin-top:7px'>Access Code: <span class='code'>"+escapeHtml(c.code)+"</span></div></div>";
+  const actions=document.createElement("div"); actions.className="actions";
+  const share=document.createElement("button"); share.className="btn primary"; share.textContent="Share";
+  share.onclick=()=>shareCustomer(c);
+  const open=document.createElement("button"); open.className="btn secondary"; open.textContent="Open Customer Portal";
+  open.onclick=()=>openCustomerPortal(c.code);
+  actions.append(share,open); row.append(actions); list.append(row);
+ });
+}
+function escapeHtml(s){return String(s??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]));}
+function generateCode(){
+ let arr=getCustomers(), code;
+ do{code="CD-"+Math.random().toString(36).slice(2,8).toUpperCase();}while(arr.some(c=>c.code===code));
+ return code;
+}
+async function shareCustomer(c){
+ const currentUrl=location.href.split("?")[0];
+ const isLocal=currentUrl.startsWith("file:") || currentUrl.startsWith("content:");
+ let url="";
+ let text="";
+ if(isLocal){
+  text="ClaimDirect customer access\\nCustomer: "+c.name+"\\nAccess Code: "+c.code+"\\n\\nOpen ClaimDirect and use this customer access code.";
+ }else{
+  // Prototype link: the access code and the minimum customer identity
+  // travel in the URL so another device can recognize the shared link.
+  const params=new URLSearchParams();
+  params.set("customer",c.code);
+  params.set("name",c.name||"");
+  params.set("email",c.email||"");
+  url=currentUrl+"?"+params.toString();
+  text="ClaimDirect customer access\\nCustomer: "+c.name+"\\nAccess Code: "+c.code+"\\nOpen: "+url;
+ }
+ if(navigator.share){
+  try{
+   const data={title:"ClaimDirect Customer Access",text};
+   if(url)data.url=url;
+   await navigator.share(data);
+   return;
+  }catch(e){}
+ }
+ try{
+  await navigator.clipboard.writeText(text);
+  alert(isLocal
+   ? "Customer access information copied. This downloaded demo cannot create a public link yet."
+   : "Customer access link copied to clipboard.");
+ }catch(e){
+  prompt("Copy customer access information:",text);
+ }
+}
+function openCustomerPortal(code){
+ sharedCode=code;
+ localStorage.setItem(KEY_SESSION,JSON.stringify({role:"customer",code}));
+ loadCustomerPortal(code);
+}
+function loadCustomerPortal(code){
+ const c=getCustomers().find(x=>x.code===code);
+ if(!c){alert("Customer access code not found in this demo.");show("accessPage");return;}
+ updateAgentStrip(); show("customerPortal"); loadCustomerDetails(); renderCustomerIncidents();
+}
+function openAgentDashboard(){updateAgentStrip();renderCustomers();show("agentDashboard");}
+
+$("agentLoginBtn").onclick=()=>{authMode="login";$("agentAuthTitle").textContent="Insurance Agent Login";$("agentAuthSubmit").textContent="Login";show("agentAuth");};
+$("agentCreateBtn").onclick=()=>{authMode="create";$("agentAuthTitle").textContent="Create Insurance Agent Account";$("agentAuthSubmit").textContent="Create Account";show("agentAuth");};
+$("customerLoginBtn").onclick=()=>{authMode="login";$("customerAuthTitle").textContent="Customer Login";$("customerAuthSubmit").textContent="Login";show("customerAuth");};
+$("customerCreateBtn").onclick=()=>{authMode="create";$("customerAuthTitle").textContent="Create Customer Account";$("customerAuthSubmit").textContent="Create Account";show("customerAuth");};
+
+$("agentAuthBack").onclick=()=>show("accessPage");
+$("customerAuthBack").onclick=()=>show("accessPage");
+
+$("agentAuthSubmit").onclick=()=>{
+ const email=$("agentEmail").value.trim(), pass=$("agentPassword").value;
+ if(!email||!pass){msg("agentAuthMessage","Please enter your email and password.");return;}
+ localStorage.setItem(KEY_SESSION,JSON.stringify({role:"agent",email}));
+ if(authMode==="create"||!getProfile()){fillProfile();show("agentProfile");}
+ else{fillProfile();openAgentDashboard();}
+};
+
+$("customerAuthSubmit").onclick=()=>{
+ const email=$("customerEmail").value.trim(), pass=$("customerPassword").value;
+ if(!email||!pass){msg("customerAuthMessage","Please enter your email and password.");return;}
+ const arr=getCustomers();
+ let c=arr.find(x=>x.email.toLowerCase()===email.toLowerCase());
+ if(!c){
+  c={name:email.split("@")[0],email,phone:"",code:generateCode()};
+  arr.push(c);saveCustomers(arr);
+ }
+ openCustomerPortal(c.code);
+};
+
+$("saveProfile").onclick=()=>{
+ const first=$("firstName").value.trim(), last=$("lastName").value.trim();
+ if(!first||!last){msg("profileMessage","Please enter your first and last name.");return;}
+ readImage($("logoInput").files[0],logo=>{
+  readImage($("agentPhotoInput").files[0],photo=>{
+   const old=getProfile()||{};
+   const p={firstName:first,lastName:last,dob:$("dob").value,agentId:$("agentId").value.trim(),logo:logo||old.logo||"",photo:photo||old.photo||""};
+   localStorage.setItem(KEY_PROFILE,JSON.stringify(p));
+   updateAgentStrip();openAgentDashboard();
+  });
+ });
+};
+
+function openAddCustomer(){
+ $("customerFormPanel").classList.remove("hidden");
+ $("customerFormPanel").scrollIntoView({behavior:"smooth",block:"start"});
+ $("newCustomerName").focus();
+}
+$("addCustomerBtn").onclick=openAddCustomer;
+$("customersQuickBtn").onclick=()=>{$("customerFormPanel").classList.add("hidden");$("customerList").scrollIntoView({behavior:"smooth",block:"start"});};
+$("cancelCustomer").onclick=()=>{$("customerFormPanel").classList.add("hidden");};
+$("saveCustomer").onclick=()=>{
+ const name=$("newCustomerName").value.trim(),email=$("newCustomerEmail").value.trim(),phone=$("newCustomerPhone").value.trim();
+ if(!name||!email){alert("Customer Name and Email are required.");return;}
+ const arr=getCustomers();
+ if(arr.some(c=>c.email.toLowerCase()===email.toLowerCase())){alert("A customer with this email already exists.");return;}
+ arr.push({name,email,phone,code:generateCode()});saveCustomers(arr);
+ $("newCustomerName").value=$("newCustomerEmail").value=$("newCustomerPhone").value="";
+ $("customerFormPanel").classList.add("hidden");renderCustomers();
+};
+
+$("editProfileBtn").onclick=()=>{fillProfile();show("agentProfile");};
+$("agentLogoutBtn").onclick=()=>{localStorage.removeItem(KEY_SESSION);show("accessPage");};
+$("customerLogoutBtn").onclick=()=>{localStorage.removeItem(KEY_SESSION);show("accessPage");};
+$("sideToggle").onclick=()=>{$("agentSidebar").classList.toggle("open");};
+$("customerSideToggle").onclick=()=>{$("customerSidebar").classList.toggle("open");};
+
+function getCurrentCustomer(){
+ const session=currentSession();
+ if(!session || session.role!=="customer" || !session.code)return null;
+ return getCustomers().find(c=>c.code===session.code)||null;
+}
+function loadCustomerDetails(){
+ const c=getCurrentCustomer();
+ if(!c)return;
+ $("custFirstName").value=c.firstName||"";
+ $("custLastName").value=c.lastName||"";
+ $("custDob").value=c.dob||"";
+ $("custAddress").value=c.address||"";
+ $("custPhone").value=c.phone||"";
+ $("custPortalEmail").value=c.email||"";
+ $("vehicleMake").value=c.vehicleMake||"";
+ $("vehicleModel").value=c.vehicleModel||"";
+ $("vehicleYear").value=c.vehicleYear||"";
+ $("vehiclePlate").value=c.vehiclePlate||"";
+ $("vehicleVin").value=c.vehicleVin||"";
+}
+function saveCustomerDetails(fields,messageId){
+ const c=getCurrentCustomer();
+ if(!c)return;
+ Object.assign(c,fields);
+ const arr=getCustomers();
+ const i=arr.findIndex(x=>x.code===c.code);
+ if(i>=0){arr[i]=c;saveCustomers(arr);}
+ msg(messageId,"Saved successfully.");
+}
+$("saveCustomerProfile").onclick=()=>{
+ const first=$("custFirstName").value.trim();
+ const last=$("custLastName").value.trim();
+ const email=$("custPortalEmail").value.trim();
+ if(!first||!last||!email){msg("customerProfileMessage","First Name, Last Name and Email are required.");return;}
+ saveCustomerDetails({
+  firstName:first,lastName:last,dob:$("custDob").value,
+  address:$("custAddress").value.trim(),phone:$("custPhone").value.trim(),email
+ },"customerProfileMessage");
+};
+$("saveVehicle").onclick=()=>{
+ const plate=$("vehiclePlate").value.trim();
+ if(!plate){msg("vehicleMessage","License Plate is required.");return;}
+ saveCustomerDetails({
+  vehicleMake:$("vehicleMake").value.trim(),vehicleModel:$("vehicleModel").value.trim(),
+  vehicleYear:$("vehicleYear").value,vehiclePlate:plate,vehicleVin:$("vehicleVin").value.trim()
+ },"vehicleMessage");
+};
+$("incidentBtn").onclick=()=>openIncidentApp();
+
+
+$("sharedLoginBtn").onclick=()=>{
+ const email=$("sharedEmail").value.trim(), pass=$("sharedPassword").value;
+ if(!email||!pass){msg("sharedMessage","Please enter your email and password.");return;}
+ let arr=getCustomers(), c=arr.find(x=>x.code===sharedCode);
+ if(!c){
+  const params=new URLSearchParams(location.search);
+  const linkedEmail=params.get("email")||email;
+  const linkedName=params.get("name")||email.split("@")[0];
+  c={name:linkedName,email:linkedEmail,phone:"",code:sharedCode};
+  arr.push(c);saveCustomers(arr);
+ }
+ if(c.email && c.email.toLowerCase()!==email.toLowerCase()){
+  msg("sharedMessage","For this demo, use the email assigned to this customer.");return;
+ }
+ openCustomerPortal(c.code);
+};
+$("sharedCreateBtn").onclick=()=>{
+ const email=$("sharedEmail").value.trim();
+ if(!email){msg("sharedMessage","Enter your email first.");return;}
+ const arr=getCustomers(), c=arr.find(x=>x.code===sharedCode);
+ if(!c){msg("sharedMessage","Customer access code not found.");return;}
+ c.email=email;saveCustomers(arr);openCustomerPortal(c.code);
+};
+
+
+/* Full ClaimDirect incident-report engine */
+let incidentPhotos = [];
+let incidentReportText = "";
+
+function syncIncidentSidebar(){
+ const p=getProfile()||{};
+ $("incidentSideLogo").src=p.logo||"";
+ $("incidentSidePhoto").src=p.photo||"";
+ $("incidentSideName").textContent=((p.firstName||"")+" "+(p.lastName||"")).trim();
+ $("incidentSideMeta").textContent=p.agentId?("Agent ID: "+p.agentId):"Insurance Agent";
+}
+
+
+function getIncidentKey(code){return "claimdirect_incidents_"+code;}
+function getCustomerIncidents(){
+ const c=getCurrentCustomer(); if(!c)return [];
+ try{return JSON.parse(localStorage.getItem(getIncidentKey(c.code))||"[]");}catch(e){return [];}
+}
+function saveCustomerIncidents(items){
+ const c=getCurrentCustomer(); if(c)localStorage.setItem(getIncidentKey(c.code),JSON.stringify(items));
+}
+function renderCustomerIncidents(){
+ const list=$("customerIncidentsList"), empty=$("noCustomerIncidents");
+ if(!list||!empty)return;
+ const items=getCustomerIncidents();
+ list.innerHTML="";
+ empty.classList.toggle("hidden",items.length>0);
+ items.slice().reverse().forEach((item,index)=>{
+  const row=document.createElement("div");
+  row.style.cssText="border:1px solid #e5e7eb;border-radius:12px;padding:15px;margin-top:10px";
+  row.innerHTML="<div style='display:flex;justify-content:space-between;gap:12px;align-items:flex-start;flex-wrap:wrap'>"+
+   "<div><strong>"+escapeHtml(item.title||("Incident "+(items.length-index)))+"</strong>"+
+   "<div class='muted' style='margin-top:5px'>"+escapeHtml(item.date||"No date")+" · "+escapeHtml(item.time||"No time")+"</div>"+
+   "<div class='muted' style='margin-top:3px'>"+escapeHtml(item.location||"No location")+" · "+(item.photos||0)+" photo"+((item.photos||0)===1?"":"s")+"</div></div>"+
+   "<span class='code'>"+escapeHtml(item.status||"Report Created")+"</span></div>"+
+   "<div class='actions' style='margin-top:10px'><button class='btn secondary' data-incident-view='"+item.id+"'>View</button></div>";
+  list.appendChild(row);
+ });
+ list.querySelectorAll("[data-incident-view]").forEach(btn=>{
+  btn.onclick=()=>viewCustomerIncident(btn.getAttribute("data-incident-view"));
+ });
+}
+function viewCustomerIncident(id){
+ const item=getCustomerIncidents().find(x=>x.id===id); if(!item)return;
+ $("incName").value=item.name||"";
+ $("incPhone").value=item.phone||"";
+ $("incEmail").value=item.email||"";
+ $("incInsurer").value=item.insurer||"";
+ $("incPolicy").value=item.policy||"";
+ $("incVehicle").value=item.vehicle||"";
+ $("incDate").value=item.date||"";
+ $("incTime").value=item.time||"";
+ $("incLocation").value=item.location||"";
+ $("incDescription").value=item.description||"";
+ incidentPhotos=item.photoData||[];
+ renderIncidentPhotos();
+ incidentReportText=item.reportText||"";
+ $("incReport").textContent=incidentReportText;
+ $("incReport").classList.toggle("hidden",!incidentReportText);
+ $("incPdfBtn").classList.toggle("hidden",!incidentReportText);
+ $("incStatus").classList.remove("hidden");
+ $("incStatus").textContent="Saved incident loaded.";
+ show("incidentApp"); syncIncidentSidebar(); window.scrollTo(0,0);
+}
+
+function openIncidentApp(){
+ show("incidentApp");
+ syncIncidentSidebar();
+ loadIncidentForm();
+ window.scrollTo(0,0);
+}
+
+function loadIncidentForm(){
+ const c=getCurrentCustomer();
+ const p=getProfile()||{};
+ if(c){
+  const full=((c.firstName||"")+" "+(c.lastName||"")).trim() || c.name || "";
+  $("incName").value=full;
+  $("incPhone").value=c.phone||"";
+  $("incEmail").value=c.email||"";
+  $("incVehicle").value=[c.vehicleMake,c.vehicleModel,c.vehiclePlate].filter(Boolean).join(" — ");
+  $("incPolicy").value=c.policy||"";
+ }
+ $("incInsurer").value=p.companyName||p.insurer||"";
+ const d=new Date();
+ $("incDate").value=d.toISOString().slice(0,10);
+ $("incTime").value=d.toTimeString().slice(0,5);
+ $("incLocation").value="";
+ $("incDescription").value="";
+ incidentPhotos=[];
+ incidentReportText="";
+ $("incPhotos").innerHTML="";
+ $("incReport").classList.add("hidden");
+ $("incPdfBtn").classList.add("hidden");
+ $("incStatus").classList.add("hidden");
+}
+
+$("incidentBackBtn").onclick=()=>{
+ show("customerPortal");
+ loadCustomerDetails();
+ renderCustomerIncidents();
+ window.scrollTo(0,0);
+};
+
+$("incidentSideToggle").onclick=()=>{
+ $("incidentSidebar").classList.toggle("open");
+};
+
+$("incLocationBtn").onclick=()=>{
+ if(!navigator.geolocation){alert("Geolocation is not available.");return;}
+ navigator.geolocation.getCurrentPosition(pos=>{
+  $("incLocation").value="Lat "+pos.coords.latitude.toFixed(6)+", Lon "+pos.coords.longitude.toFixed(6);
+ },()=>alert("Location unavailable. You can enter it manually."));
+};
+
+$("incCamera").addEventListener("change",e=>{
+ [...e.target.files].forEach(file=>{
+  const reader=new FileReader();
+  reader.onload=ev=>{
+   incidentPhotos.push({name:file.name,data:ev.target.result});
+   renderIncidentPhotos();
+  };
+  reader.readAsDataURL(file);
+ });
+ e.target.value="";
+});
+
+function renderIncidentPhotos(){
+ $("incPhotos").innerHTML=incidentPhotos.map((p,i)=>`
+  <div style="position:relative;border-radius:12px;overflow:hidden;background:#eee;aspect-ratio:1">
+   <img src="${p.data}" alt="Photo ${i+1}" style="width:100%;height:100%;object-fit:cover">
+   <button onclick="removeIncidentPhoto(${i})" style="position:absolute;right:5px;top:5px;padding:5px;border-radius:50%;border:0;background:white;font-weight:800">×</button>
+  </div>`).join("");
+}
+function removeIncidentPhoto(i){
+ incidentPhotos.splice(i,1);
+ renderIncidentPhotos();
+}
+
+function buildIncidentReport(){
+ const data={
+  name:$("incName").value,
+  phone:$("incPhone").value,
+  email:$("incEmail").value,
+  insurer:$("incInsurer").value,
+  policy:$("incPolicy").value,
+  vehicle:$("incVehicle").value,
+  date:$("incDate").value,
+  time:$("incTime").value,
+  location:$("incLocation").value,
+  description:$("incDescription").value,
+  photos:incidentPhotos.length
+ };
+ incidentReportText=
+`CLAIMDIRECT — INCIDENT REPORT
+
+CUSTOMER
+Full name: ${data.name||"—"}
+Phone: ${data.phone||"—"}
+Email: ${data.email||"—"}
+
+INSURANCE
+Insurance company: ${data.insurer||"—"}
+Policy number: ${data.policy||"—"}
+
+VEHICLE
+${data.vehicle||"—"}
+
+INCIDENT
+Date: ${data.date||"—"}
+Time: ${data.time||"—"}
+Location: ${data.location||"—"}
+
+DESCRIPTION
+${data.description||"—"}
+
+EVIDENCE PHOTOS
+Photos attached: ${data.photos}`;
+
+ $("incReport").textContent=incidentReportText;
+ $("incReport").classList.remove("hidden");
+ $("incPdfBtn").classList.remove("hidden");
+
+ const customer=getCurrentCustomer();
+ if(customer){
+  const items=getCustomerIncidents();
+  items.push({
+   id:"INC-"+Date.now()+"-"+Math.random().toString(36).slice(2,7).toUpperCase(),
+   title:"Incident "+new Date().toLocaleDateString(),
+   name:data.name,phone:data.phone,email:data.email,insurer:data.insurer,
+   policy:data.policy,vehicle:data.vehicle,date:data.date,time:data.time,
+   location:data.location,description:data.description,photos:incidentPhotos.length,
+   photoData:incidentPhotos.slice(),reportText:incidentReportText,
+   status:"Report Created",createdAt:new Date().toISOString()
+  });
+  saveCustomerIncidents(items);
+  renderCustomerIncidents();
+ }
+ msg("incStatus","Report created successfully and saved to My Incidents.");
+}
+
+$("incCreateReport").onclick=buildIncidentReport;
+
+async function generateIncidentPDF(){
+ if(!incidentReportText)buildIncidentReport();
+
+ const {jsPDF}=window.jspdf||{};
+ if(!jsPDF){
+  alert("PDF engine could not be loaded. Please open ClaimDirect with an internet connection.");
+  return;
+ }
+
+ function imageToJpeg(dataUrl){
+  return new Promise((resolve,reject)=>{
+   const img=new Image();
+   img.onload=()=>{
+    const maxSide=1800;
+    let w=img.naturalWidth||img.width;
+    let h=img.naturalHeight||img.height;
+    if(!w||!h){reject(new Error("Invalid image"));return;}
+    const scale=Math.min(1,maxSide/Math.max(w,h));
+    w=Math.max(1,Math.round(w*scale));
+    h=Math.max(1,Math.round(h*scale));
+    const canvas=document.createElement("canvas");
+    canvas.width=w;canvas.height=h;
+    const ctx=canvas.getContext("2d");
+    ctx.fillStyle="#ffffff";
+    ctx.fillRect(0,0,w,h);
+    ctx.drawImage(img,0,0,w,h);
+    resolve({data:canvas.toDataURL("image/jpeg",0.88),width:w,height:h});
+   };
+   img.onerror=()=>reject(new Error("Could not read image"));
+   img.src=dataUrl;
+  });
+ }
+
+ const doc=new jsPDF({unit:"mm",format:"a4"});
+ const margin=14,pageW=210,pageH=297;
+ let y=18;
+
+ function header(){
+  doc.setFillColor(255,255,255);
+  doc.rect(0,0,pageW,pageH,"F");
+  doc.setTextColor(20,28,38);
+  doc.setFont("helvetica","bold");
+  doc.setFontSize(18);
+  doc.text("ClaimDirect",margin,y);
+  y+=10;
+ }
+
+ function lineText(label,value){
+  const v=(value||"—").toString();
+  doc.setFont("helvetica","bold");
+  doc.setFontSize(10);
+  doc.setTextColor(30,40,50);
+  doc.text(label,margin,y);
+  y+=5;
+  doc.setFont("helvetica","normal");
+  const lines=doc.splitTextToSize(v,pageW-margin*2);
+  doc.text(lines,margin,y);
+  y+=lines.length*5+3;
+  if(y>pageH-20){
+   doc.addPage();
+   y=18;
+   header();
+  }
+ }
+
+ function section(title){
+  if(y>pageH-30){
+   doc.addPage();
+   y=18;
+   header();
+  }
+  doc.setFont("helvetica","bold");
+  doc.setFontSize(13);
+  doc.setTextColor(23,105,224);
+  doc.text(title,margin,y);
+  y+=8;
+ }
+
+ header();
+ section("CUSTOMER");
+ lineText("Full name",$("incName").value);
+ lineText("Phone",$("incPhone").value);
+ lineText("Email",$("incEmail").value);
+
+ section("INSURANCE");
+ lineText("Insurance company",$("incInsurer").value);
+ lineText("Policy number",$("incPolicy").value);
+
+ section("VEHICLE");
+ lineText("Vehicle / license plate",$("incVehicle").value);
+
+ section("INCIDENT");
+ lineText("Date",$("incDate").value);
+ lineText("Time",$("incTime").value);
+ lineText("Location",$("incLocation").value);
+ lineText("Description",$("incDescription").value);
+
+ section("EVIDENCE PHOTOS");
+
+ if(!incidentPhotos.length){
+  lineText("Photos","No photos attached");
+ }else{
+  for(let i=0;i<incidentPhotos.length;i++){
+   try{
+    const converted=await imageToJpeg(incidentPhotos[i].data);
+    const maxW=180,maxH=105;
+    let w=maxW,h=w*converted.height/converted.width;
+    if(h>maxH){
+     h=maxH;
+     w=h*converted.width/converted.height;
+    }
+    if(y+h+14>pageH-10){
+     doc.addPage();
+     y=18;
+     header();
+     section("EVIDENCE PHOTOS");
+    }
+    doc.setFont("helvetica","bold");
+    doc.setFontSize(10);
+    doc.setTextColor(30,40,50);
+    doc.text("Photo "+(i+1),margin,y);
+    y+=5;
+    doc.addImage(converted.data,"JPEG",margin,y,w,h,undefined,"FAST");
+    y+=h+9;
+   }catch(err){
+    if(y>pageH-25){
+     doc.addPage();
+     y=18;
+     header();
+    }
+    doc.setFont("helvetica","normal");
+    doc.setFontSize(9);
+    doc.setTextColor(180,40,40);
+    doc.text("Photo "+(i+1)+": could not be embedded",margin,y);
+    y+=7;
+   }
+  }
+ }
+
+ const stamp=new Date();
+ const filename="ClaimDirect_Incident_"+stamp.getFullYear()+"-"+pad2(stamp.getMonth()+1)+"-"+pad2(stamp.getDate())+"_"+pad2(stamp.getHours())+"-"+pad2(stamp.getMinutes())+".pdf";
+ const blob=doc.output("blob");
+ const file=new File([blob],filename,{type:"application/pdf"});
+
+ if(navigator.share && (!navigator.canShare || navigator.canShare({files:[file]}))){
+  try{
+   await navigator.share({
+    title:"ClaimDirect Incident Report",
+    text:"Incident report with evidence photos attached.",
+    files:[file]
+   });
+   return;
+  }catch(e){
+   if(e&&e.name==="AbortError")return;
+  }
+ }
+
+ const url=URL.createObjectURL(blob);
+ window.open(url,"_blank");
+ setTimeout(()=>URL.revokeObjectURL(url),60000);
+}
+
+$("incPdfBtn").onclick=generateIncidentPDF;
+
+function initShared(){
+ const params=new URLSearchParams(location.search);
+ const code=params.get("customer");
+ if(!code)return false;
+ sharedCode=code;
+ const p=getProfile()||{};
+ const localCustomer=getCustomers().find(x=>x.code===code);
+ const linkedName=params.get("name")||"";
+ const linkedEmail=params.get("email")||"";
+
+ // On another device localStorage is empty. The shared URL therefore
+ // supplies enough demo information to recognize the customer access code.
+ if(!localCustomer && linkedEmail){
+  const arr=getCustomers();
+  arr.push({name:linkedName||linkedEmail.split("@")[0],email:linkedEmail,phone:"",code});
+  saveCustomers(arr);
+ }
+ const c=getCustomers().find(x=>x.code===code);
+ $("sharedInsurerText").textContent=((p.firstName||"")+" "+(p.lastName||"")).trim()+(p.agentId?" · Agent ID: "+p.agentId:"");
+ $("sharedLogo").src=p.logo||"";
+ $("sharedMessage").classList.add("hidden");
+ if(c){
+  $("sharedEmail").value=c.email||"";
+ }
+ show("sharedLogin");
+ return true;
+}
+
+fillProfile();
+if(!initShared())show("accessPage");
+</script>
+</body>
+</html>
